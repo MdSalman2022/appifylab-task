@@ -1,0 +1,101 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Appifylab social feed API
+
+Parameters:
+  Stage:
+    Type: String
+    Default: production
+    AllowedValues:
+      - production
+  AppOrigin:
+    Type: String
+    Description: Exact frontend origin allowed to send credentialed requests
+  DatabaseUrl:
+    Type: String
+    Description: Neon pooled PostgreSQL connection string
+    NoEcho: true
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Architectures:
+      - arm64
+    MemorySize: 512
+    Timeout: 15
+    Tracing: Active
+    Environment:
+      Variables:
+        NODE_ENV: production
+        APP_ORIGIN: !Ref AppOrigin
+        DATABASE_URL: !Ref DatabaseUrl
+        API_BASE_PATH: !Sub /${Stage}
+
+Resources:
+  Api:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Stage
+      CorsConfiguration:
+        AllowCredentials: true
+        AllowHeaders:
+          - Content-Type
+          - X-Request-Id
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+        AllowOrigins:
+          - !Ref AppOrigin
+        MaxAge: 600
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 100
+        ThrottlingRateLimit: 50
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - src/handler.ts
+        External:
+          - "@prisma/client"
+        Format: cjs
+        Minify: true
+        Sourcemap: false
+        Target: es2022
+    Properties:
+      FunctionName: !Sub appifylab-api-${Stage}
+      CodeUri: .
+      Handler: handler.handler
+      Description: Stateless Express API for the Appifylab social feed
+      Events:
+        Root:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /
+            Method: ANY
+        Proxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /{proxy+}
+            Method: ANY
+
+  ApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      LogGroupName: !Sub /aws/lambda/appifylab-api-${Stage}
+      RetentionInDays: 14
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway base URL
+    Value: !Sub https://${Api}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Stage}

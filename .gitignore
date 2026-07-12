@@ -1,9 +1,15 @@
 node_modules/
 .next/
+.open-next/
+.wrangler/
 coverage/
 dist/
+.aws-sam/
 .env
 .env.*
 !.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+samconfig.toml
 *.pem
-

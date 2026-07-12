@@ -1,0 +1,11 @@
+version = 0.1
+
+[production.deploy.parameters]
+stack_name = "appifylab-api-production"
+resolve_s3 = true
+s3_prefix = "appifylab-api-production"
+region = "ap-southeast-1"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+fail_on_empty_changeset = false
+parameter_overrides = "Stage=production AppOrigin=https://app.example.com"

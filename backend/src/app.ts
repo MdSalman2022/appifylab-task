@@ -7,50 +7,73 @@ import express, {
 } from "express";
 import helmet from "helmet";
 
-export const app = express();
+import { checkDatabaseConnection } from "./lib/database-health.js";
 
-app.disable("x-powered-by");
-app.use(helmet());
-app.use(
-  cors({
-    origin: process.env.APP_ORIGIN ?? "http://localhost:3000",
-    credentials: true,
-  }),
-);
-app.use(express.json({ limit: "1mb" }));
-app.use(cookieParser());
+type AppDependencies = {
+  checkDatabase: () => Promise<boolean>;
+};
 
-app.get("/health", (_request, response) => {
-  response.status(200).json({ data: { status: "ok" } });
-});
+export function createApp(
+  dependencies: AppDependencies = { checkDatabase: checkDatabaseConnection },
+) {
+  const app = express();
 
-app.use((_request, response) => {
-  response.status(404).json({
-    error: {
-      code: "NOT_FOUND",
-      message: "Route not found",
-    },
-  });
-});
+  app.disable("x-powered-by");
+  app.use(helmet());
+  app.use(
+    cors({
+      origin: process.env.APP_ORIGIN ?? "http://localhost:3000",
+      credentials: true,
+    }),
+  );
+  app.use(express.json({ limit: "1mb" }));
+  app.use(cookieParser());
 
-app.use(
-  (
-    error: unknown,
-    _request: Request,
-    response: Response,
-    _next: NextFunction,
-  ) => {
-    console.error("Unhandled API error", error);
+  app.get("/health", async (_request, response) => {
+    const isDatabaseOnline = await dependencies.checkDatabase();
 
-    if (response.headersSent) {
-      return;
-    }
-
-    response.status(500).json({
-      error: {
-        code: "INTERNAL_ERROR",
-        message: "An unexpected error occurred",
+    response.status(isDatabaseOnline ? 200 : 503).json({
+      data: {
+        status: isDatabaseOnline ? "ok" : "degraded",
+        database: {
+          status: isDatabaseOnline ? "online" : "offline",
+        },
       },
     });
-  },
-);
+  });
+
+  app.use((_request, response) => {
+    response.status(404).json({
+      error: {
+        code: "NOT_FOUND",
+        message: "Route not found",
+      },
+    });
+  });
+
+  app.use(
+    (
+      error: unknown,
+      _request: Request,
+      response: Response,
+      _next: NextFunction,
+    ) => {
+      console.error("Unhandled API error", error);
+
+      if (response.headersSent) {
+        return;
+      }
+
+      response.status(500).json({
+        error: {
+          code: "INTERNAL_ERROR",
+          message: "An unexpected error occurred",
+        },
+      });
+    },
+  );
+
+  return app;
+}
+
+export const app = createApp();

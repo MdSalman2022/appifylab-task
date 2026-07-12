@@ -1,14 +1,35 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 
-import { app } from "../src/app.js";
+import { createApp } from "../src/app.js";
+
+const app = createApp({ checkDatabase: async () => true });
 
 describe("GET /health", () => {
   it("returns the service status without exposing implementation details", async () => {
     const response = await request(app).get("/health");
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ data: { status: "ok" } });
+    expect(response.body).toEqual({
+      data: {
+        status: "ok",
+        database: { status: "online" },
+      },
+    });
+  });
+
+  it("returns 503 without exposing details when the database is offline", async () => {
+    const offlineApp = createApp({ checkDatabase: async () => false });
+
+    const response = await request(offlineApp).get("/health");
+
+    expect(response.status).toBe(503);
+    expect(response.body).toEqual({
+      data: {
+        status: "degraded",
+        database: { status: "offline" },
+      },
+    });
   });
 
   it("returns the standard error shape for an unknown route", async () => {
