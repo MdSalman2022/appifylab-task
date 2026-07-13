@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "client"
 }
 
@@ -14,7 +14,7 @@ model User {
   firstName    String        @db.VarChar(80)
   lastName     String        @db.VarChar(80)
   email        String        @unique @db.VarChar(320)
-  passwordHash String        @db.VarChar(255)
+  passwordHash String?       @db.VarChar(255)
   avatarKey    String?       @db.VarChar(512)
   createdAt    DateTime      @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime      @updatedAt @db.Timestamptz(3)
@@ -23,6 +23,20 @@ model User {
   comments     Comment[]
   postLikes    PostLike[]
   commentLikes CommentLike[]
+  authAccounts AuthAccount[]
+}
+
+model AuthAccount {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @db.Uuid
+  provider          String   @db.VarChar(50)
+  providerAccountId String   @db.VarChar(255)
+  createdAt         DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(3)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId, provider])
 }
 
 model Session {

@@ -1,0 +1,22 @@
+.container {
+  width: 100%;
+  max-width: 1320px;
+  margin-inline: auto;
+  padding: 90px 12px 0;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: 306px minmax(0, 636px) 306px;
+  gap: 24px;
+}
+
+@media (max-width: 991px) {
+  .container {
+    padding-top: 74px;
+  }
+
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

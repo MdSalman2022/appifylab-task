@@ -7,14 +7,20 @@ import express, {
 } from "express";
 import helmet from "helmet";
 
+import { createPrismaAuthStore, type AuthStore } from "./auth/auth-store.js";
+import { createAuthRouter } from "./auth/auth-router.js";
 import { checkDatabaseConnection } from "./lib/database-health.js";
 
 type AppDependencies = {
   checkDatabase: () => Promise<boolean>;
+  authStore: AuthStore;
 };
 
 export function createApp(
-  dependencies: AppDependencies = { checkDatabase: checkDatabaseConnection },
+  dependencies: AppDependencies = {
+    checkDatabase: checkDatabaseConnection,
+    authStore: createPrismaAuthStore(),
+  },
 ) {
   const app = express();
 
@@ -28,6 +34,7 @@ export function createApp(
   );
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
+  app.use("/auth", createAuthRouter(dependencies.authStore));
 
   app.get("/health", async (_request, response) => {
     const isDatabaseOnline = await dependencies.checkDatabase();

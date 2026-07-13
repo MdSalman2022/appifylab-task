@@ -13,3 +13,4 @@ dist/
 !.dev.vars.example
 samconfig.toml
 *.pem
+**/env.local.json

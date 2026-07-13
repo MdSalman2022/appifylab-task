@@ -15,6 +15,10 @@ Parameters:
     Type: String
     Description: Neon pooled PostgreSQL connection string
     NoEcho: true
+  DummyPasswordHash:
+    Type: String
+    Description: Bcrypt hash used for constant-time invalid-login checks
+    NoEcho: true
 
 Globals:
   Function:
@@ -29,6 +33,7 @@ Globals:
         NODE_ENV: production
         APP_ORIGIN: !Ref AppOrigin
         DATABASE_URL: !Ref DatabaseUrl
+        DUMMY_PASSWORD_HASH: !Ref DummyPasswordHash
         API_BASE_PATH: !Sub /${Stage}
 
 Resources:

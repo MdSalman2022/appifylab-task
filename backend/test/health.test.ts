@@ -2,8 +2,12 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 
 import { createApp } from "../src/app.js";
+import { createInMemoryAuthStore } from "./support/in-memory-auth-store.js";
 
-const app = createApp({ checkDatabase: async () => true });
+const app = createApp({
+  checkDatabase: async () => true,
+  authStore: createInMemoryAuthStore(),
+});
 
 describe("GET /health", () => {
   it("returns the service status without exposing implementation details", async () => {
@@ -19,7 +23,10 @@ describe("GET /health", () => {
   });
 
   it("returns 503 without exposing details when the database is offline", async () => {
-    const offlineApp = createApp({ checkDatabase: async () => false });
+    const offlineApp = createApp({
+      checkDatabase: async () => false,
+      authStore: createInMemoryAuthStore(),
+    });
 
     const response = await request(offlineApp).get("/health");
 
