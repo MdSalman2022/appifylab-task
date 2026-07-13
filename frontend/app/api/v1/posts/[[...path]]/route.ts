@@ -1,4 +1,4 @@
-import { proxyPostRequest } from "../../../_lib/posts/post-gateway";
+import { proxyPostRequest } from "../../../../_lib/posts/post-gateway";
 
 type PostRouteContext = {
   params: Promise<{ path?: string[] }>;

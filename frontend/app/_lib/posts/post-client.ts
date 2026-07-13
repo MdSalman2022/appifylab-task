@@ -1,4 +1,5 @@
 import { requestEmpty, requestJson } from "../api/api-client";
+import { POSTS_API_PATH } from "../api/api-paths";
 import {
   postPageResponseSchema,
   postLikersResponseSchema,
@@ -14,7 +15,7 @@ export async function listPosts(cursor?: string): Promise<PostPage> {
   const query = new URLSearchParams({ limit: "20" });
   if (cursor) query.set("cursor", cursor);
   const response = await requestJson(
-    `/api/posts?${query}`,
+    `${POSTS_API_PATH}?${query}`,
     { method: "GET" },
     postPageResponseSchema,
   );
@@ -23,7 +24,7 @@ export async function listPosts(cursor?: string): Promise<PostPage> {
 
 export async function createPost(input: CreatePostInput): Promise<FeedPost> {
   const response = await requestJson(
-    "/api/posts",
+    POSTS_API_PATH,
     { method: "POST", body: JSON.stringify(input) },
     postResponseSchema,
   );
@@ -35,7 +36,7 @@ export async function updatePost(
   input: UpdatePostInput,
 ): Promise<FeedPost> {
   const response = await requestJson(
-    `/api/posts/${postId}`,
+    `${POSTS_API_PATH}/${postId}`,
     { method: "PATCH", body: JSON.stringify(input) },
     postResponseSchema,
   );
@@ -43,12 +44,12 @@ export async function updatePost(
 }
 
 export function deletePost(postId: string): Promise<void> {
-  return requestEmpty(`/api/posts/${postId}`, { method: "DELETE" });
+  return requestEmpty(`${POSTS_API_PATH}/${postId}`, { method: "DELETE" });
 }
 
 export async function likePost(postId: string): Promise<FeedPost> {
   const response = await requestJson(
-    `/api/posts/${postId}/likes`,
+    `${POSTS_API_PATH}/${postId}/likes`,
     { method: "POST" },
     postResponseSchema,
   );
@@ -57,7 +58,7 @@ export async function likePost(postId: string): Promise<FeedPost> {
 
 export async function unlikePost(postId: string): Promise<FeedPost> {
   const response = await requestJson(
-    `/api/posts/${postId}/likes`,
+    `${POSTS_API_PATH}/${postId}/likes`,
     { method: "DELETE" },
     postResponseSchema,
   );
@@ -71,7 +72,7 @@ export async function listPostLikers(
   const query = new URLSearchParams({ limit: "20" });
   if (cursor) query.set("cursor", cursor);
   const response = await requestJson(
-    `/api/posts/${postId}/likes?${query}`,
+    `${POSTS_API_PATH}/${postId}/likes?${query}`,
     { method: "GET" },
     postLikersResponseSchema,
   );

@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { createApp } from "../src/app.js";
 import { createInMemoryAuthModel } from "./support/in-memory-auth-model.js";
 
+const AUTH_BASE = "/api/v1/auth";
 
 function createTestApp() {
   return createApp({
@@ -14,7 +15,7 @@ function createTestApp() {
 
 describe("authentication", () => {
   it("registers a user, sets a secure session cookie, and returns the user", async () => {
-    const response = await request(createTestApp()).post("/auth/register").send({
+    const response = await request(createTestApp()).post(`${AUTH_BASE}/register`).send({
       firstName: "Salman",
       lastName: "Ahmed",
       email: "SALMAN@example.com",
@@ -33,7 +34,7 @@ describe("authentication", () => {
   });
 
   it("rejects invalid registration input", async () => {
-    const response = await request(createTestApp()).post("/auth/register").send({
+    const response = await request(createTestApp()).post(`${AUTH_BASE}/register`).send({
       firstName: "",
       lastName: "Ahmed",
       email: "invalid",
@@ -51,18 +52,18 @@ describe("authentication", () => {
 
   it("uses the same error for an unknown email and an incorrect password", async () => {
     const app = createTestApp();
-    await request(app).post("/auth/register").send({
+    await request(app).post(`${AUTH_BASE}/register`).send({
       firstName: "Salman",
       lastName: "Ahmed",
       email: "salman@example.com",
       password: "StrongPassword123!",
     });
 
-    const unknown = await request(app).post("/auth/login").send({
+    const unknown = await request(app).post(`${AUTH_BASE}/login`).send({
       email: "unknown@example.com",
       password: "StrongPassword123!",
     });
-    const incorrect = await request(app).post("/auth/login").send({
+    const incorrect = await request(app).post(`${AUTH_BASE}/login`).send({
       email: "salman@example.com",
       password: "WrongPassword123!",
     });
@@ -74,19 +75,19 @@ describe("authentication", () => {
 
   it("only persists the login cookie when remember me is enabled", async () => {
     const app = createTestApp();
-    await request(app).post("/auth/register").send({
+    await request(app).post(`${AUTH_BASE}/register`).send({
       firstName: "Salman",
       lastName: "Ahmed",
       email: "salman@example.com",
       password: "StrongPassword123!",
     });
 
-    const sessionOnly = await request(app).post("/auth/login").send({
+    const sessionOnly = await request(app).post(`${AUTH_BASE}/login`).send({
       email: "salman@example.com",
       password: "StrongPassword123!",
       rememberMe: false,
     });
-    const persistent = await request(app).post("/auth/login").send({
+    const persistent = await request(app).post(`${AUTH_BASE}/login`).send({
       email: "salman@example.com",
       password: "StrongPassword123!",
       rememberMe: true,
@@ -98,7 +99,7 @@ describe("authentication", () => {
 
   it("returns the authenticated user and invalidates the session on logout", async () => {
     const app = createTestApp();
-    const registration = await request(app).post("/auth/register").send({
+    const registration = await request(app).post(`${AUTH_BASE}/register`).send({
       firstName: "Salman",
       lastName: "Ahmed",
       email: "salman@example.com",
@@ -106,9 +107,9 @@ describe("authentication", () => {
     });
     const cookie = registration.headers["set-cookie"][0];
 
-    const me = await request(app).get("/auth/me").set("Cookie", cookie);
-    const logout = await request(app).post("/auth/logout").set("Cookie", cookie);
-    const afterLogout = await request(app).get("/auth/me").set("Cookie", cookie);
+    const me = await request(app).get(`${AUTH_BASE}/me`).set("Cookie", cookie);
+    const logout = await request(app).post(`${AUTH_BASE}/logout`).set("Cookie", cookie);
+    const afterLogout = await request(app).get(`${AUTH_BASE}/me`).set("Cookie", cookie);
 
     expect(me.status).toBe(200);
     expect(me.body.data.user.email).toBe("salman@example.com");

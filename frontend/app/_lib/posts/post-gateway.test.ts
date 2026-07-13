@@ -14,7 +14,7 @@ describe("post gateway", () => {
       Response.json({ data: { posts: [], nextCursor: null } }),
     );
     vi.stubGlobal("fetch", fetchMock);
-    const request = new Request("https://app.example.com/api/posts?limit=20", {
+    const request = new Request("https://app.example.com/api/v1/posts?limit=20", {
       headers: { cookie: "session=token" },
     });
 
@@ -22,7 +22,7 @@ describe("post gateway", () => {
 
     expect(response.status).toBe(200);
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.com/production/posts?limit=20",
+      "https://api.example.com/production/api/v1/posts?limit=20",
       expect.objectContaining({ method: "GET" }),
     );
     const upstreamRequest = fetchMock.mock.calls[0][1] as RequestInit;
@@ -33,7 +33,7 @@ describe("post gateway", () => {
 
   it("rejects nested or malformed post paths", async () => {
     const response = await proxyPostRequest(
-      new Request("https://app.example.com/api/posts/not-a-uuid/comments"),
+      new Request("https://app.example.com/api/v1/posts/not-a-uuid/comments"),
       ["not-a-uuid", "comments"],
     );
 
@@ -49,13 +49,13 @@ describe("post gateway", () => {
     const postId = "b3e857a5-bf7a-4ef1-b9d3-91a20f677718";
 
     const response = await proxyPostRequest(
-      new Request(`https://app.example.com/api/posts/${postId}/likes`),
+      new Request(`https://app.example.com/api/v1/posts/${postId}/likes`),
       [postId, "likes"],
     );
 
     expect(response.status).toBe(200);
     expect(fetchMock).toHaveBeenCalledWith(
-      `https://api.example.com/production/posts/${postId}/likes`,
+      `https://api.example.com/production/api/v1/posts/${postId}/likes`,
       expect.objectContaining({ method: "GET" }),
     );
   });

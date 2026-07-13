@@ -1,4 +1,4 @@
-import { proxyAuthRequest } from "../../../_lib/auth/auth-gateway";
+import { proxyAuthRequest } from "../../../../_lib/auth/auth-gateway";
 
 type AuthRouteContext = {
   params: Promise<{ endpoint: string }>;

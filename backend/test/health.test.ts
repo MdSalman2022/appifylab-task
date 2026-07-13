@@ -51,6 +51,14 @@ describe("GET /health", () => {
     });
   });
 
+  it("does not expose unversioned business API routes", async () => {
+    const authResponse = await request(app).post("/auth/login");
+    const postsResponse = await request(app).get("/posts");
+
+    expect(authResponse.status).toBe(404);
+    expect(postsResponse.status).toBe(404);
+  });
+
   it("only allows the configured frontend origin to make browser requests", async () => {
     const response = await request(app)
       .options("/health")

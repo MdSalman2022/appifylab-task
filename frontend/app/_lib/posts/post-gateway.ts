@@ -1,4 +1,5 @@
 import { getApiUrl } from "../auth/api-url";
+import { POSTS_API_PATH } from "../api/api-paths";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -35,7 +36,7 @@ export async function proxyPostRequest(
   const hasBody = request.method === "POST" || request.method === "PATCH";
 
   try {
-    const upstream = await fetch(`${getApiUrl()}/posts${suffix}${search}`, {
+    const upstream = await fetch(`${getApiUrl()}${POSTS_API_PATH}${suffix}${search}`, {
       method: request.method,
       headers,
       body: hasBody ? await request.arrayBuffer() : undefined,

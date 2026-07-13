@@ -1,4 +1,5 @@
 import { getApiUrl } from "./api-url";
+import { AUTH_API_PATH } from "../api/api-paths";
 
 const allowedEndpoints = new Set(["login", "register", "me", "logout"]);
 
@@ -30,7 +31,7 @@ export async function proxyAuthRequest(
   const hasBody = request.method !== "GET" && request.method !== "HEAD";
 
   try {
-    const upstream = await fetch(`${getApiUrl()}/auth/${endpoint}`, {
+    const upstream = await fetch(`${getApiUrl()}${AUTH_API_PATH}/${endpoint}`, {
       method: request.method,
       headers,
       body: hasBody ? await request.arrayBuffer() : undefined,

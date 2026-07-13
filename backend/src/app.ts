@@ -10,8 +10,7 @@ import helmet from "helmet";
 import { checkDatabaseConnection } from "./lib/database-health.js";
 import { createPrismaAuthModel, type AuthModel } from "./models/auth-model.js";
 import { createPrismaPostModel, type PostModel } from "./models/post-model.js";
-import { createAuthRoutes } from "./routes/auth-routes.js";
-import { createPostRoutes } from "./routes/post-routes.js";
+import { createApiV1Routes } from "./routes/api-v1-routes.js";
 
 type AppDependencies = {
   checkDatabase: () => Promise<boolean>;
@@ -38,10 +37,9 @@ export function createApp(
   );
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
-  app.use("/auth", createAuthRoutes(dependencies.authModel));
   app.use(
-    "/posts",
-    createPostRoutes(
+    "/api/v1",
+    createApiV1Routes(
       dependencies.authModel,
       dependencies.postModel ?? createPrismaPostModel(),
     ),

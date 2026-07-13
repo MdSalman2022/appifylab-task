@@ -29,7 +29,7 @@ describe("auth client", () => {
 
     expect(user.email).toBe("salman@example.com");
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/auth/login",
+      "/api/v1/auth/login",
       expect.objectContaining({ method: "POST", credentials: "same-origin" }),
     );
   });
@@ -57,7 +57,7 @@ describe("auth client", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/auth/register",
+      "/api/v1/auth/register",
       expect.objectContaining({ method: "POST", credentials: "same-origin" }),
     );
   });
@@ -92,7 +92,7 @@ describe("auth client", () => {
 
     await expect(logout()).resolves.toBeUndefined();
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/auth/logout",
+      "/api/v1/auth/logout",
       expect.objectContaining({ method: "POST", credentials: "same-origin" }),
     );
   });

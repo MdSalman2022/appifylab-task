@@ -20,7 +20,7 @@ describe("auth gateway", () => {
       }),
     );
     vi.stubGlobal("fetch", fetchMock);
-    const request = new Request("https://app.example.com/api/auth/login", {
+    const request = new Request("https://app.example.com/api/v1/auth/login", {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -32,7 +32,7 @@ describe("auth gateway", () => {
     const response = await proxyAuthRequest(request, "login");
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.com/production/auth/login",
+      "https://api.example.com/production/api/v1/auth/login",
       expect.objectContaining({ method: "POST" }),
     );
     const upstreamRequest = fetchMock.mock.calls[0][1] as RequestInit;
@@ -45,7 +45,7 @@ describe("auth gateway", () => {
 
   it("rejects paths outside the auth endpoint allowlist", async () => {
     const response = await proxyAuthRequest(
-      new Request("https://app.example.com/api/auth/admin"),
+      new Request("https://app.example.com/api/v1/auth/admin"),
       "admin",
     );
 

@@ -5,6 +5,9 @@ import { createApp } from "../src/app.js";
 import { createInMemoryAuthModel } from "./support/in-memory-auth-model.js";
 import { createInMemoryPostModel } from "./support/in-memory-post-model.js";
 
+const AUTH_BASE = "/api/v1/auth";
+const POSTS_BASE = "/api/v1/posts";
+
 function createTestApp() {
   const authModel = createInMemoryAuthModel();
   return createApp({
@@ -19,7 +22,7 @@ async function registerUser(
   email: string,
   firstName = "Salman",
 ) {
-  const response = await request(app).post("/auth/register").send({
+  const response = await request(app).post(`${AUTH_BASE}/register`).send({
     firstName,
     lastName: "Ahmed",
     email,
@@ -32,11 +35,11 @@ describe("posts", () => {
   it("requires authentication to create and read the feed", async () => {
     const app = createTestApp();
 
-    const createResponse = await request(app).post("/posts").send({
+    const createResponse = await request(app).post(POSTS_BASE).send({
       content: "Hello BuddyScript",
       visibility: "PUBLIC",
     });
-    const listResponse = await request(app).get("/posts");
+    const listResponse = await request(app).get(POSTS_BASE);
 
     expect(createResponse.status).toBe(401);
     expect(listResponse.status).toBe(401);
@@ -47,14 +50,14 @@ describe("posts", () => {
     const cookie = await registerUser(app, "salman@example.com");
 
     await request(app)
-      .post("/posts")
+      .post(POSTS_BASE)
       .set("Cookie", cookie)
       .send({ content: "First post", visibility: "PUBLIC" });
     const created = await request(app)
-      .post("/posts")
+      .post(POSTS_BASE)
       .set("Cookie", cookie)
       .send({ content: "Newest post", visibility: "PRIVATE" });
-    const feed = await request(app).get("/posts?limit=10").set("Cookie", cookie);
+    const feed = await request(app).get(`${POSTS_BASE}?limit=10`).set("Cookie", cookie);
 
     expect(created.status).toBe(201);
     expect(created.body.data.post).toMatchObject({
@@ -75,15 +78,15 @@ describe("posts", () => {
     const viewerCookie = await registerUser(app, "viewer@example.com", "Viewer");
 
     await request(app)
-      .post("/posts")
+      .post(POSTS_BASE)
       .set("Cookie", authorCookie)
       .send({ content: "Public post", visibility: "PUBLIC" });
     await request(app)
-      .post("/posts")
+      .post(POSTS_BASE)
       .set("Cookie", authorCookie)
       .send({ content: "Private post", visibility: "PRIVATE" });
 
-    const feed = await request(app).get("/posts").set("Cookie", viewerCookie);
+    const feed = await request(app).get(POSTS_BASE).set("Cookie", viewerCookie);
 
     expect(feed.body.data.posts).toHaveLength(1);
     expect(feed.body.data.posts[0].content).toBe("Public post");
@@ -94,7 +97,7 @@ describe("posts", () => {
     const cookie = await registerUser(app, "salman@example.com");
 
     const response = await request(app)
-      .post("/posts")
+      .post(POSTS_BASE)
       .set("Cookie", cookie)
       .send({ content: "   ", visibility: "PUBLIC" });
 
@@ -107,24 +110,24 @@ describe("posts", () => {
     const authorCookie = await registerUser(app, "author@example.com", "Author");
     const otherCookie = await registerUser(app, "other@example.com", "Other");
     const created = await request(app)
-      .post("/posts")
+      .post(POSTS_BASE)
       .set("Cookie", authorCookie)
       .send({ content: "Original", visibility: "PUBLIC" });
     const postId = created.body.data.post.id as string;
 
     const forbiddenUpdate = await request(app)
-      .patch(`/posts/${postId}`)
+      .patch(`${POSTS_BASE}/${postId}`)
       .set("Cookie", otherCookie)
       .send({ content: "Changed" });
     const updated = await request(app)
-      .patch(`/posts/${postId}`)
+      .patch(`${POSTS_BASE}/${postId}`)
       .set("Cookie", authorCookie)
       .send({ content: "Updated" });
     const forbiddenDelete = await request(app)
-      .delete(`/posts/${postId}`)
+      .delete(`${POSTS_BASE}/${postId}`)
       .set("Cookie", otherCookie);
     const deleted = await request(app)
-      .delete(`/posts/${postId}`)
+      .delete(`${POSTS_BASE}/${postId}`)
       .set("Cookie", authorCookie);
 
     expect(forbiddenUpdate.status).toBe(403);
@@ -137,7 +140,7 @@ describe("posts", () => {
     const app = createTestApp();
     const cookie = await registerUser(app, "author@example.com", "Author");
     const created = await request(app)
-      .post("/posts")
+      .post(POSTS_BASE)
       .set("Cookie", cookie)
       .send({
         content: "Original",
@@ -147,7 +150,7 @@ describe("posts", () => {
     const postId = created.body.data.post.id as string;
 
     const updated = await request(app)
-      .patch(`/posts/${postId}`)
+      .patch(`${POSTS_BASE}/${postId}`)
       .set("Cookie", cookie)
       .send({ content: null });
 
@@ -164,14 +167,14 @@ describe("posts", () => {
     const cookie = await registerUser(app, "salman@example.com");
     for (const content of ["One", "Two", "Three"]) {
       await request(app)
-        .post("/posts")
+        .post(POSTS_BASE)
         .set("Cookie", cookie)
         .send({ content, visibility: "PUBLIC" });
     }
 
-    const firstPage = await request(app).get("/posts?limit=2").set("Cookie", cookie);
+    const firstPage = await request(app).get(`${POSTS_BASE}?limit=2`).set("Cookie", cookie);
     const secondPage = await request(app)
-      .get(`/posts?limit=2&cursor=${firstPage.body.data.nextCursor}`)
+      .get(`${POSTS_BASE}?limit=2&cursor=${firstPage.body.data.nextCursor}`)
       .set("Cookie", cookie);
 
     expect(firstPage.body.data.posts).toHaveLength(2);
@@ -187,22 +190,22 @@ describe("posts", () => {
     const authorCookie = await registerUser(app, "author@example.com", "Author");
     const likerCookie = await registerUser(app, "liker@example.com", "Liker");
     const created = await request(app)
-      .post("/posts")
+      .post(POSTS_BASE)
       .set("Cookie", authorCookie)
       .send({ content: "Like this", visibility: "PUBLIC" });
     const postId = created.body.data.post.id as string;
 
     const liked = await request(app)
-      .post(`/posts/${postId}/likes`)
+      .post(`${POSTS_BASE}/${postId}/likes`)
       .set("Cookie", likerCookie);
     const likedAgain = await request(app)
-      .post(`/posts/${postId}/likes`)
+      .post(`${POSTS_BASE}/${postId}/likes`)
       .set("Cookie", likerCookie);
     const likers = await request(app)
-      .get(`/posts/${postId}/likes`)
+      .get(`${POSTS_BASE}/${postId}/likes`)
       .set("Cookie", authorCookie);
     const unliked = await request(app)
-      .delete(`/posts/${postId}/likes`)
+      .delete(`${POSTS_BASE}/${postId}/likes`)
       .set("Cookie", likerCookie);
 
     expect(liked.body.data.post).toMatchObject({
@@ -225,16 +228,16 @@ describe("posts", () => {
     const authorCookie = await registerUser(app, "author@example.com", "Author");
     const viewerCookie = await registerUser(app, "viewer@example.com", "Viewer");
     const created = await request(app)
-      .post("/posts")
+      .post(POSTS_BASE)
       .set("Cookie", authorCookie)
       .send({ content: "Private", visibility: "PRIVATE" });
     const postId = created.body.data.post.id as string;
 
     const likeResponse = await request(app)
-      .post(`/posts/${postId}/likes`)
+      .post(`${POSTS_BASE}/${postId}/likes`)
       .set("Cookie", viewerCookie);
     const likersResponse = await request(app)
-      .get(`/posts/${postId}/likes`)
+      .get(`${POSTS_BASE}/${postId}/likes`)
       .set("Cookie", viewerCookie);
 
     expect(likeResponse.status).toBe(404);

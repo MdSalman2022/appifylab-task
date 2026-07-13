@@ -36,7 +36,7 @@ describe("post client", () => {
 
     expect(page.posts[0].content).toBe("Hello BuddyScript");
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/posts?limit=20",
+      "/api/v1/posts?limit=20",
       expect.objectContaining({ credentials: "same-origin" }),
     );
   });
@@ -54,7 +54,7 @@ describe("post client", () => {
 
     expect(created.id).toBe(post.id);
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/posts",
+      "/api/v1/posts",
       expect.objectContaining({ method: "POST", credentials: "same-origin" }),
     );
   });
@@ -89,7 +89,7 @@ describe("post client", () => {
     expect(likers.users[0].firstName).toBe("Salman");
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      `/api/posts/${post.id}/likes`,
+      `/api/v1/posts/${post.id}/likes`,
       expect.objectContaining({ method: "POST" }),
     );
   });
