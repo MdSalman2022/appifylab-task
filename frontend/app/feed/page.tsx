@@ -1,5 +1,6 @@
 import { requireCurrentUser } from "../_lib/auth/auth-server";
-import { FeedPost, PostComposer, Stories } from "./_components/feed-content";
+import { Stories } from "./_components/feed-content";
+import { FeedTimeline } from "./_components/feed-timeline";
 import { FeedHeader } from "./_components/feed-header";
 import { FeedTheme } from "./_components/feed-theme";
 import { LeftSidebar } from "./_components/left-sidebar";
@@ -17,8 +18,7 @@ export default async function FeedPage() {
             <LeftSidebar />
             <div>
               <Stories />
-              <PostComposer />
-              <FeedPost />
+              <FeedTimeline currentUserId={user.id} />
             </div>
             <RightSidebar />
           </div>

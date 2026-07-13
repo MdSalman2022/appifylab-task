@@ -1,7 +1,9 @@
+import { Providers } from "../providers";
+
 export default function FeedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <Providers>{children}</Providers>;
 }

@@ -7,19 +7,23 @@ import express, {
 } from "express";
 import helmet from "helmet";
 
-import { createPrismaAuthStore, type AuthStore } from "./auth/auth-store.js";
-import { createAuthRouter } from "./auth/auth-router.js";
 import { checkDatabaseConnection } from "./lib/database-health.js";
+import { createPrismaAuthModel, type AuthModel } from "./models/auth-model.js";
+import { createPrismaPostModel, type PostModel } from "./models/post-model.js";
+import { createAuthRoutes } from "./routes/auth-routes.js";
+import { createPostRoutes } from "./routes/post-routes.js";
 
 type AppDependencies = {
   checkDatabase: () => Promise<boolean>;
-  authStore: AuthStore;
+  authModel: AuthModel;
+  postModel?: PostModel;
 };
 
 export function createApp(
   dependencies: AppDependencies = {
     checkDatabase: checkDatabaseConnection,
-    authStore: createPrismaAuthStore(),
+    authModel: createPrismaAuthModel(),
+    postModel: createPrismaPostModel(),
   },
 ) {
   const app = express();
@@ -34,7 +38,14 @@ export function createApp(
   );
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
-  app.use("/auth", createAuthRouter(dependencies.authStore));
+  app.use("/auth", createAuthRoutes(dependencies.authModel));
+  app.use(
+    "/posts",
+    createPostRoutes(
+      dependencies.authModel,
+      dependencies.postModel ?? createPrismaPostModel(),
+    ),
+  );
 
   app.get("/health", async (_request, response) => {
     const isDatabaseOnline = await dependencies.checkDatabase();

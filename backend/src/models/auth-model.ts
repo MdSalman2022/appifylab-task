@@ -15,7 +15,7 @@ export type StoredSession = {
   expiresAt: Date;
 };
 
-export type AuthStore = {
+export type AuthModel = {
   findUserByEmail(email: string): Promise<StoredUser | null>;
   findUserById(id: string): Promise<StoredUser | null>;
   createUser(input: Omit<StoredUser, "id">): Promise<StoredUser>;
@@ -24,10 +24,12 @@ export type AuthStore = {
   deleteSession(tokenHash: string): Promise<void>;
 };
 
-export function createPrismaAuthStore(): AuthStore {
+export function createPrismaAuthModel(): AuthModel {
   return {
-    findUserByEmail: (email) => getPrismaClient().user.findUnique({ where: { email } }),
-    findUserById: (id) => getPrismaClient().user.findUnique({ where: { id } }),
+    findUserByEmail: (email) =>
+      getPrismaClient().user.findUnique({ where: { email } }),
+    findUserById: (id) =>
+      getPrismaClient().user.findUnique({ where: { id } }),
     createUser: (data) => getPrismaClient().user.create({ data }),
     async createSession(data) {
       await getPrismaClient().session.create({ data });

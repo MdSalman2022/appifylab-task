@@ -2,13 +2,13 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 
 import { createApp } from "../src/app.js";
-import { createInMemoryAuthStore } from "./support/in-memory-auth-store.js";
+import { createInMemoryAuthModel } from "./support/in-memory-auth-model.js";
 
 
 function createTestApp() {
   return createApp({
     checkDatabase: async () => true,
-    authStore: createInMemoryAuthStore(),
+    authModel: createInMemoryAuthModel(),
   });
 }
 
@@ -42,6 +42,11 @@ describe("authentication", () => {
 
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
+    expect(response.body.error.details).toMatchObject({
+      firstName: expect.any(Array),
+      email: expect.any(Array),
+      password: expect.any(Array),
+    });
   });
 
   it("uses the same error for an unknown email and an incorrect password", async () => {

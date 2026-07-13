@@ -2,19 +2,17 @@ import bcrypt from "bcryptjs";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 
-import type { AuthStore, StoredUser } from "./auth-store.js";
+import type { AuthModel, StoredUser } from "../models/auth-model.js";
 
 export type Authentication = passport.Authenticator;
 
-
-export function createAuthentication(store: AuthStore): Authentication {
+export function createAuthentication(model: AuthModel): Authentication {
   const dummyPasswordHash = process.env.DUMMY_PASSWORD_HASH;
   if (!dummyPasswordHash) {
     throw new Error("DUMMY_PASSWORD_HASH is required");
   }
 
   const authentication = new passport.Authenticator();
-
   authentication.use(
     "local",
     new LocalStrategy(
@@ -25,7 +23,7 @@ export function createAuthentication(store: AuthStore): Authentication {
       },
       async (email, password, done) => {
         try {
-          const user = await store.findUserByEmail(email.trim().toLowerCase());
+          const user = await model.findUserByEmail(email.trim().toLowerCase());
           const isPasswordValid = await bcrypt.compare(
             password,
             user?.passwordHash ?? dummyPasswordHash,

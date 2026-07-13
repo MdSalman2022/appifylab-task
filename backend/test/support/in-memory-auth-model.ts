@@ -1,10 +1,10 @@
 import type {
-  AuthStore,
+  AuthModel,
   StoredSession,
   StoredUser,
-} from "../../src/auth/auth-store.js";
+} from "../../src/models/auth-model.js";
 
-export function createInMemoryAuthStore(): AuthStore {
+export function createInMemoryAuthModel(): AuthModel {
   const users: StoredUser[] = [];
   const sessions: StoredSession[] = [];
 
@@ -27,7 +27,9 @@ export function createInMemoryAuthStore(): AuthStore {
       return sessions.find((session) => session.tokenHash === tokenHash) ?? null;
     },
     async deleteSession(tokenHash) {
-      const index = sessions.findIndex((session) => session.tokenHash === tokenHash);
+      const index = sessions.findIndex(
+        (session) => session.tokenHash === tokenHash,
+      );
       if (index >= 0) sessions.splice(index, 1);
     },
   };
