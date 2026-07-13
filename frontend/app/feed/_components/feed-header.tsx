@@ -1,19 +1,20 @@
 import Image from "next/image";
 import {
   Bell,
-  ChevronDown,
   Home,
   MessageCircle,
   Search,
   Users,
 } from "lucide-react";
+import type { AuthUser } from "../../_lib/auth/auth-contract";
+import { ProfileMenu } from "./profile-menu";
 const navigation = [
   { label: "Home", icon: Home, badge: undefined },
   { label: "Friends", icon: Users, badge: undefined },
   { label: "Notifications", icon: Bell, badge: "6" },
   { label: "Messages", icon: MessageCircle, badge: "2" },
 ];
-export function FeedHeader() {
+export function FeedHeader({ user }: { user: AuthUser }) {
   return (
     <header className="_feed_header fixed inset-x-0 top-0 z-50 h-[74px] border-t-2 border-[#263a30] bg-white dark:bg-[#112032] dark:text-white">
       <div className="!mx-auto flex h-[74px] w-full max-w-[1320px] items-center px-3">
@@ -62,23 +63,7 @@ export function FeedHeader() {
             </a>
           ))}
         </nav>
-        <button
-          type="button"
-          className="ml-2 flex shrink-0 items-center gap-2"
-          aria-label="Open profile menu"
-        >
-          <Image
-            src="/assets/images/profile.png"
-            alt=""
-            width={24}
-            height={24}
-            className="size-6 rounded-full object-cover"
-          />
-          <span className="text-base text-[#112032] dark:text-white">
-            Dylan Field
-          </span>
-          <ChevronDown className="size-4" />
-        </button>
+        <ProfileMenu user={user} />
       </div>
     </header>
   );

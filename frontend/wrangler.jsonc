@@ -13,13 +13,15 @@
     "head_sampling_rate": 1
   },
   "vars": {
-    "ENVIRONMENT": "development"
+    "ENVIRONMENT": "development",
+    "API_URL": "http://localhost:4000"
   },
   "env": {
     "production": {
       "name": "appifylab-task",
       "vars": {
-        "ENVIRONMENT": "production"
+        "ENVIRONMENT": "production",
+        "API_URL": "https://mjvlj0imf4.execute-api.ap-southeast-1.amazonaws.com/production"
       }
     }
   }

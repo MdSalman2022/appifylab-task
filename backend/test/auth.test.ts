@@ -67,6 +67,30 @@ describe("authentication", () => {
     expect(unknown.body).toEqual(incorrect.body);
   });
 
+  it("only persists the login cookie when remember me is enabled", async () => {
+    const app = createTestApp();
+    await request(app).post("/auth/register").send({
+      firstName: "Salman",
+      lastName: "Ahmed",
+      email: "salman@example.com",
+      password: "StrongPassword123!",
+    });
+
+    const sessionOnly = await request(app).post("/auth/login").send({
+      email: "salman@example.com",
+      password: "StrongPassword123!",
+      rememberMe: false,
+    });
+    const persistent = await request(app).post("/auth/login").send({
+      email: "salman@example.com",
+      password: "StrongPassword123!",
+      rememberMe: true,
+    });
+
+    expect(sessionOnly.headers["set-cookie"][0]).not.toContain("Max-Age");
+    expect(persistent.headers["set-cookie"][0]).toContain("Max-Age");
+  });
+
   it("returns the authenticated user and invalidates the session on logout", async () => {
     const app = createTestApp();
     const registration = await request(app).post("/auth/register").send({

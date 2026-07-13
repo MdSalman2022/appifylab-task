@@ -23,6 +23,7 @@ const registrationSchema = z.object({
 const loginSchema = z.object({
   email: z.email().trim().toLowerCase().max(320),
   password: z.string().min(1).max(128),
+  rememberMe: z.boolean().default(false),
 });
 
 function publicUser(user: StoredUser) {
@@ -34,14 +35,14 @@ function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
-function setSessionCookie(response: Response, token: string) {
+function setSessionCookie(response: Response, token: string, persistent: boolean) {
   const isProduction = process.env.NODE_ENV === "production";
   response.cookie(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? "none" : "lax",
     path: "/",
-    maxAge: SESSION_DURATION_MS,
+    ...(persistent ? { maxAge: SESSION_DURATION_MS } : {}),
   });
 }
 
@@ -87,7 +88,7 @@ export function createAuthRouter(
         passwordHash: await bcrypt.hash(parsed.data.password, 12),
       });
       const token = await createSession(store, user.id);
-      setSessionCookie(response, token);
+      setSessionCookie(response, token, true);
       response.status(201).json({ data: { user: publicUser(user) } });
     } catch (error) {
       next(error);
@@ -121,7 +122,7 @@ export function createAuthRouter(
 
         void createSession(store, user.id)
           .then((token) => {
-            setSessionCookie(response, token);
+            setSessionCookie(response, token, parsed.data.rememberMe);
             response.json({ data: { user: publicUser(user) } });
           })
           .catch(next);
