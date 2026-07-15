@@ -48,9 +48,9 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      - run: npm run cf:typegen
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:run
       - run: npm run build
-      - run: npm run cf:types:check
       - run: npm run cf:dry-run
