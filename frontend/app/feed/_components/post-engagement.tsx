@@ -11,6 +11,7 @@ type PostEngagementProps = {
   commentCount: number;
   viewerHasLiked: boolean;
   onToggleLike: () => Promise<void>;
+  onOpenComments: () => void;
 };
 
 export function PostEngagement({
@@ -19,6 +20,7 @@ export function PostEngagement({
   commentCount,
   viewerHasLiked,
   onToggleLike,
+  onOpenComments,
 }: PostEngagementProps) {
   const [isLikePending, setIsLikePending] = useState(false);
   const [isLikersOpen, setIsLikersOpen] = useState(false);
@@ -53,10 +55,10 @@ export function PostEngagement({
           {likeCount} {likeCount === 1 ? "like" : "likes"}
         </button>
         <div className="flex gap-4 text-sm text-black/45 dark:text-white/46">
-          <span>
+          <button type="button" onClick={onOpenComments}>
             <span className="text-[#112032] dark:text-white">{commentCount}</span>{" "}
-            Comment
-          </span>
+            {commentCount === 1 ? "Comment" : "Comments"}
+          </button>
           <span>Share</span>
         </div>
       </div>
@@ -81,6 +83,7 @@ export function PostEngagement({
         </button>
         <button
           type="button"
+          onClick={onOpenComments}
           className="mr-1 flex h-12 flex-1 items-center justify-center gap-2 rounded-md text-sm transition-colors hover:bg-[#e4f1fd] dark:hover:bg-[#123150]"
         >
           <MessageSquareText className="size-[21px]" strokeWidth={1.3} />

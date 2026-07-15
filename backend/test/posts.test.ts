@@ -31,6 +31,23 @@ async function registerUser(
   return response.headers["set-cookie"][0] as string;
 }
 
+async function registerUserWithIdentity(
+  app: ReturnType<typeof createTestApp>,
+  email: string,
+  firstName = "Salman",
+) {
+  const response = await request(app).post(`${AUTH_BASE}/register`).send({
+    firstName,
+    lastName: "Ahmed",
+    email,
+    password: "StrongPassword123!",
+  });
+  return {
+    cookie: response.headers["set-cookie"][0] as string,
+    userId: response.body.data.user.id as string,
+  };
+}
+
 describe("posts", () => {
   it("requires authentication to create and read the feed", async () => {
     const app = createTestApp();
@@ -57,7 +74,9 @@ describe("posts", () => {
       .post(POSTS_BASE)
       .set("Cookie", cookie)
       .send({ content: "Newest post", visibility: "PRIVATE" });
-    const feed = await request(app).get(`${POSTS_BASE}?limit=10`).set("Cookie", cookie);
+    const feed = await request(app)
+      .get(`${POSTS_BASE}?limit=10`)
+      .set("Cookie", cookie);
 
     expect(created.status).toBe(201);
     expect(created.body.data.post).toMatchObject({
@@ -66,10 +85,9 @@ describe("posts", () => {
       author: { firstName: "Salman" },
     });
     expect(feed.status).toBe(200);
-    expect(feed.body.data.posts.map((post: { content: string }) => post.content)).toEqual([
-      "Newest post",
-      "First post",
-    ]);
+    expect(
+      feed.body.data.posts.map((post: { content: string }) => post.content),
+    ).toEqual(["Newest post", "First post"]);
   });
 
   it("hides private posts from other users", async () => {
@@ -105,6 +123,31 @@ describe("posts", () => {
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
 
+  it("only accepts R2 image keys owned by the authenticated user", async () => {
+    const app = createTestApp();
+    const user = await registerUserWithIdentity(app, "owner@example.com");
+    const anotherUserId = crypto.randomUUID();
+
+    const rejected = await request(app)
+      .post(POSTS_BASE)
+      .set("Cookie", user.cookie)
+      .send({
+        imageKey: `users/${anotherUserId}/posts/${crypto.randomUUID()}.webp`,
+        visibility: "PUBLIC",
+      });
+    const accepted = await request(app)
+      .post(POSTS_BASE)
+      .set("Cookie", user.cookie)
+      .send({
+        imageKey: `users/${user.userId}/posts/${crypto.randomUUID()}.webp`,
+        visibility: "PUBLIC",
+      });
+
+    expect(rejected.status).toBe(422);
+    expect(rejected.body.error.code).toBe("INVALID_IMAGE_KEY");
+    expect(accepted.status).toBe(201);
+  });
+
   it("only allows an author to update or delete a post", async () => {
     const app = createTestApp();
     const authorCookie = await registerUser(app, "author@example.com", "Author");
@@ -138,26 +181,31 @@ describe("posts", () => {
 
   it("preserves visibility on partial updates and supports clearing content", async () => {
     const app = createTestApp();
-    const cookie = await registerUser(app, "author@example.com", "Author");
+    const user = await registerUserWithIdentity(
+      app,
+      "author@example.com",
+      "Author",
+    );
+    const imageKey = `users/${user.userId}/posts/${crypto.randomUUID()}.jpg`;
     const created = await request(app)
       .post(POSTS_BASE)
-      .set("Cookie", cookie)
+      .set("Cookie", user.cookie)
       .send({
         content: "Original",
-        imageKey: "posts/example/image.jpg",
+        imageKey,
         visibility: "PRIVATE",
       });
     const postId = created.body.data.post.id as string;
 
     const updated = await request(app)
       .patch(`${POSTS_BASE}/${postId}`)
-      .set("Cookie", cookie)
+      .set("Cookie", user.cookie)
       .send({ content: null });
 
     expect(updated.status).toBe(200);
     expect(updated.body.data.post).toMatchObject({
       content: null,
-      imageKey: "posts/example/image.jpg",
+      imageKey,
       visibility: "PRIVATE",
     });
   });
@@ -172,16 +220,20 @@ describe("posts", () => {
         .send({ content, visibility: "PUBLIC" });
     }
 
-    const firstPage = await request(app).get(`${POSTS_BASE}?limit=2`).set("Cookie", cookie);
+    const firstPage = await request(app)
+      .get(`${POSTS_BASE}?limit=2`)
+      .set("Cookie", cookie);
     const secondPage = await request(app)
       .get(`${POSTS_BASE}?limit=2&cursor=${firstPage.body.data.nextCursor}`)
       .set("Cookie", cookie);
 
     expect(firstPage.body.data.posts).toHaveLength(2);
     expect(firstPage.body.data.nextCursor).toEqual(expect.any(String));
-    expect(secondPage.body.data.posts.map((post: { content: string }) => post.content)).toEqual([
-      "One",
-    ]);
+    expect(
+      secondPage.body.data.posts.map(
+        (post: { content: string }) => post.content,
+      ),
+    ).toEqual(["One"]);
     expect(secondPage.body.data.nextCursor).toBeNull();
   });
 

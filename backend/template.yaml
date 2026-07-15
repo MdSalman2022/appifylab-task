@@ -19,6 +19,20 @@ Parameters:
     Type: String
     Description: Bcrypt hash used for constant-time invalid-login checks
     NoEcho: true
+  R2AccountId:
+    Type: String
+    Description: Cloudflare account identifier containing the media bucket
+  R2BucketName:
+    Type: String
+    Description: Cloudflare R2 bucket used for post images
+  R2AccessKeyId:
+    Type: String
+    Description: R2 object read and write access key identifier
+    NoEcho: true
+  R2SecretAccessKey:
+    Type: String
+    Description: R2 object read and write secret access key
+    NoEcho: true
 
 Globals:
   Function:
@@ -34,6 +48,10 @@ Globals:
         APP_ORIGIN: !Ref AppOrigin
         DATABASE_URL: !Ref DatabaseUrl
         DUMMY_PASSWORD_HASH: !Ref DummyPasswordHash
+        R2_ACCOUNT_ID: !Ref R2AccountId
+        R2_BUCKET_NAME: !Ref R2BucketName
+        R2_ACCESS_KEY_ID: !Ref R2AccessKeyId
+        R2_SECRET_ACCESS_KEY: !Ref R2SecretAccessKey
         API_BASE_PATH: !Sub /${Stage}
 
 Resources:

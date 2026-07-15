@@ -11,6 +11,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/local.js",
     "postinstall": "prisma generate",
+    "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
@@ -23,6 +24,8 @@
     "sam:deploy": "sam deploy --config-env production"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1086.0",
+    "@aws-sdk/s3-request-presigner": "^3.1086.0",
     "@prisma/adapter-pg": "^6.19.3",
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
@@ -40,6 +43,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
@@ -48,9 +52,12 @@
     "@types/passport-local": "^1.0.38",
     "@types/pg": "^8.20.0",
     "@types/supertest": "^6.0.3",
+    "eslint": "^10.7.0",
+    "globals": "^17.7.0",
     "supertest": "^7.1.1",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.64.0",
     "vitest": "^3.2.4"
   }
 }

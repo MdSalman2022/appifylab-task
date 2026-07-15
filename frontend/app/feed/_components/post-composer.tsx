@@ -1,41 +1,99 @@
 "use client";
 
-import Image from "next/image";
 import {
   CalendarDays,
   FileText,
   Image as ImageIcon,
   Send,
   Video,
+  X,
 } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import Image from "next/image";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import type {
   CreatePostInput,
   PostVisibility,
 } from "../../_lib/posts/post-contract";
+import {
+  uploadPostImage,
+  validatePostImage,
+} from "../../_lib/uploads/upload-client";
 
 type PostComposerProps = {
   onCreate: (input: CreatePostInput) => Promise<void>;
+  onUploadImage?: (file: File) => Promise<string>;
 };
 
-export function PostComposer({ onCreate }: PostComposerProps) {
+export function PostComposer({
+  onCreate,
+  onUploadImage = uploadPostImage,
+}: PostComposerProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [content, setContent] = useState("");
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [visibility, setVisibility] = useState<PostVisibility>("PUBLIC");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const canSubmit = content.trim().length > 0 && !isSubmitting;
+  const previewUrl = useMemo(() => {
+    if (!selectedImage || typeof URL.createObjectURL !== "function") {
+      return null;
+    }
+    return URL.createObjectURL(selectedImage);
+  }, [selectedImage]);
+  const canSubmit =
+    (content.trim().length > 0 || selectedImage !== null) && !isSubmitting;
+
+  useEffect(
+    () => () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    },
+    [previewUrl],
+  );
+
+  function selectImage(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setError("");
+    try {
+      validatePostImage(file);
+      setSelectedImage(file);
+    } catch (caughtError) {
+      setSelectedImage(null);
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Choose a valid image",
+      );
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmedContent = content.trim();
-    if (!trimmedContent) return;
+    if (!trimmedContent && !selectedImage) return;
 
     setError("");
     setIsSubmitting(true);
     try {
-      await onCreate({ content: trimmedContent, visibility });
+      const imageKey = selectedImage
+        ? await onUploadImage(selectedImage)
+        : undefined;
+      await onCreate({
+        ...(trimmedContent ? { content: trimmedContent } : {}),
+        ...(imageKey ? { imageKey } : {}),
+        visibility,
+      });
       setContent("");
+      setSelectedImage(null);
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -70,23 +128,59 @@ export function PostComposer({ onCreate }: PostComposerProps) {
           className="min-h-16 flex-1 resize-none bg-transparent pt-1 text-base text-[#595b61] outline-none placeholder:text-[#595b61] dark:text-white dark:placeholder:text-white/46"
         />
       </div>
+
+      {selectedImage && (
+        <div className="relative mt-4 overflow-hidden rounded-md border border-[#dce4f1] bg-[#f5f8ff] dark:border-white/10 dark:bg-[#11263c]">
+          {previewUrl ? (
+            <Image
+              src={previewUrl}
+              alt="Selected post image preview"
+              width={588}
+              height={320}
+              unoptimized
+              className="max-h-80 w-full object-contain"
+            />
+          ) : (
+            <p className="p-4 text-sm">{selectedImage.name}</p>
+          )}
+          <button
+            type="button"
+            onClick={() => setSelectedImage(null)}
+            aria-label="Remove selected image"
+            className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/75"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
+
       <div className="mt-8 flex min-h-16 items-center bg-[#f5f8ff] px-6 dark:bg-[#11263c]">
         <div className="flex items-center gap-6 text-[#555b64] dark:text-white/46">
-          <button type="button" disabled title="Image uploads are the next implementation slice" className="flex items-center gap-2 disabled:cursor-not-allowed">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            aria-label="Choose a post image"
+            onChange={selectImage}
+            className="sr-only"
+          />
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 disabled:cursor-not-allowed"
+          >
             <ImageIcon className="size-5" />
             Photo
           </button>
           <button type="button" disabled className="flex items-center gap-2 disabled:cursor-not-allowed">
-            <Video className="size-5" />
-            Video
+            <Video className="size-5" /> Video
           </button>
           <button type="button" disabled className="flex items-center gap-2 disabled:cursor-not-allowed">
-            <CalendarDays className="size-5" />
-            Event
+            <CalendarDays className="size-5" /> Event
           </button>
           <button type="button" disabled className="flex items-center gap-2 disabled:cursor-not-allowed">
-            <FileText className="size-5" />
-            Article
+            <FileText className="size-5" /> Article
           </button>
         </div>
         <label className="ml-auto mr-3 text-sm text-[#555b64] dark:text-white/70">
@@ -97,7 +191,8 @@ export function PostComposer({ onCreate }: PostComposerProps) {
             onChange={(event) =>
               setVisibility(event.target.value as PostVisibility)
             }
-            className="h-10 rounded border border-[#dce4f1] bg-white px-2 outline-none focus:border-[#1890ff] dark:border-white/15 dark:bg-[#112032]"
+            disabled={isSubmitting}
+            className="h-10 rounded border border-[#dce4f1] bg-white px-2 outline-none focus:border-[#1890ff] disabled:opacity-60 dark:border-white/15 dark:bg-[#112032]"
           >
             <option value="PUBLIC">Public</option>
             <option value="PRIVATE">Private</option>
@@ -109,7 +204,7 @@ export function PostComposer({ onCreate }: PostComposerProps) {
           className="flex h-12 w-[102px] items-center justify-center gap-2 rounded bg-[#1890ff] font-medium text-white transition-colors hover:bg-[#377dff] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Send className="size-4" />
-          {isSubmitting ? "Posting" : "Post"}
+          {isSubmitting ? (selectedImage ? "Uploading" : "Posting") : "Post"}
         </button>
       </div>
       {error && (

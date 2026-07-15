@@ -1,28 +1,30 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "appifylab-task",
-  "main": ".open-next/worker.js",
-  "compatibility_date": "2026-07-12",
-  "compatibility_flags": ["nodejs_compat"],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  },
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 1
-  },
-  "vars": {
-    "ENVIRONMENT": "development",
-    "API_URL": "http://localhost:4000"
-  },
-  "env": {
-    "production": {
-      "name": "appifylab-task",
-      "vars": {
-        "ENVIRONMENT": "production",
-        "API_URL": "https://mjvlj0imf4.execute-api.ap-southeast-1.amazonaws.com/production"
-      }
-    }
-  }
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "appifylab-task",
+	"main": ".open-next/worker.js",
+	"compatibility_date": "2026-07-12",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"observability": {
+		"enabled": true,
+		"head_sampling_rate": 1
+	},
+	"vars": {
+		"ENVIRONMENT": "development",
+		"API_URL": "http://localhost:4000"
+	},
+	"env": {
+		"production": {
+			"name": "appifylab-task",
+			"vars": {
+				"ENVIRONMENT": "production",
+				"API_URL": "https://mjvlj0imf4.execute-api.ap-southeast-1.amazonaws.com/production"
+			}
+		}
+	}, 
 }

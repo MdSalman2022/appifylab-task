@@ -9,13 +9,21 @@ import helmet from "helmet";
 
 import { checkDatabaseConnection } from "./lib/database-health.js";
 import { createPrismaAuthModel, type AuthModel } from "./models/auth-model.js";
+import {
+  createPrismaCommentModel,
+  type CommentModel,
+} from "./models/comment-model.js";
 import { createPrismaPostModel, type PostModel } from "./models/post-model.js";
 import { createApiV1Routes } from "./routes/api-v1-routes.js";
+import type { PostImageStorage } from "./services/post-image-storage.js";
+import { createR2PostImageStorage } from "./services/r2-post-image-storage.js";
 
 type AppDependencies = {
   checkDatabase: () => Promise<boolean>;
   authModel: AuthModel;
   postModel?: PostModel;
+  commentModel?: CommentModel;
+  postImageStorage?: PostImageStorage;
 };
 
 export function createApp(
@@ -23,6 +31,8 @@ export function createApp(
     checkDatabase: checkDatabaseConnection,
     authModel: createPrismaAuthModel(),
     postModel: createPrismaPostModel(),
+    commentModel: createPrismaCommentModel(),
+    postImageStorage: createR2PostImageStorage(),
   },
 ) {
   const app = express();
@@ -42,6 +52,8 @@ export function createApp(
     createApiV1Routes(
       dependencies.authModel,
       dependencies.postModel ?? createPrismaPostModel(),
+      dependencies.commentModel ?? createPrismaCommentModel(),
+      dependencies.postImageStorage ?? createR2PostImageStorage(),
     ),
   );
 
@@ -76,9 +88,7 @@ export function createApp(
     ) => {
       console.error("Unhandled API error", error);
 
-      if (response.headersSent) {
-        return;
-      }
+      if (response.headersSent) return;
 
       response.status(500).json({
         error: {

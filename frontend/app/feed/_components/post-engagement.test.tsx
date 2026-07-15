@@ -9,6 +9,7 @@ afterEach(cleanup);
 
 function renderEngagement(
   onToggleLike: () => Promise<void>,
+  onOpenComments = vi.fn(),
   viewerHasLiked = false,
 ) {
   const queryClient = new QueryClient({
@@ -22,6 +23,7 @@ function renderEngagement(
         commentCount={0}
         viewerHasLiked={viewerHasLiked}
         onToggleLike={onToggleLike}
+        onOpenComments={onOpenComments}
       />
     </QueryClientProvider>,
   );
@@ -39,10 +41,23 @@ describe("PostEngagement", () => {
   });
 
   it("exposes the selected like state", () => {
-    renderEngagement(vi.fn().mockResolvedValue(undefined), true);
+    renderEngagement(vi.fn().mockResolvedValue(undefined), vi.fn(), true);
 
     expect(
       screen.getByRole("button", { name: "Like" }).getAttribute("aria-pressed"),
     ).toBe("true");
+  });
+
+  it("opens the post comments", async () => {
+    const user = userEvent.setup();
+    const onOpenComments = vi.fn();
+    renderEngagement(
+      vi.fn().mockResolvedValue(undefined),
+      onOpenComments,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Comment" }));
+
+    expect(onOpenComments).toHaveBeenCalledOnce();
   });
 });
