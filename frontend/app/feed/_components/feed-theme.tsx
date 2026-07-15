@@ -3,18 +3,18 @@
 import { Moon, Sun } from "lucide-react";
 import type { ReactNode } from "react";
 
+export function toggleTheme() {
+  const root = document.documentElement;
+  const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
+
+  root.dataset.theme = nextTheme;
+  window.localStorage.setItem("theme", nextTheme);
+}
+
 export function FeedTheme({ children }: { children: ReactNode }) {
-  function toggleTheme() {
-    const root = document.documentElement;
-    const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
-
-    root.dataset.theme = nextTheme;
-    window.localStorage.setItem("theme", nextTheme);
-  }
-
   return (
     <div className="min-h-screen bg-[#f0f2f5] text-[#112032] transition-colors duration-150 dark:bg-[#232e42] dark:text-white">
-      <div className="fixed right-4 top-1/2 z-[60] -translate-y-1/2">
+      <div className="fixed right-4 top-1/2 z-[60] -translate-y-1/2 max-lg:hidden">
         <button
           type="button"
           onClick={toggleTheme}

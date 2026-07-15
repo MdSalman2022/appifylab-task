@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -13,9 +13,8 @@ describe("PostComposer", () => {
     render(<PostComposer onCreate={onCreate} />);
 
     await user.type(screen.getByLabelText("Post content"), "  Hello feed  ");
-    fireEvent.change(screen.getByLabelText("Post visibility"), {
-      target: { value: "PRIVATE" },
-    });
+    await user.click(screen.getByRole("button", { name: "Post visibility" }));
+    await user.click(screen.getByRole("option", { name: /Private/ }));
     await user.click(screen.getByRole("button", { name: "Post" }));
 
     await waitFor(() => {

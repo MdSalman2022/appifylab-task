@@ -17,7 +17,13 @@ import type {
   CommentPage,
   FeedComment,
 } from "../../_lib/comments/comment-contract";
+import {
+  DEFAULT_AVATAR,
+  resolveAvatarUrl,
+} from "../../_lib/uploads/media-url";
 import { LikersDialog } from "./likers-dialog";
+
+const FALLBACK_COMMENT_AVATAR = DEFAULT_AVATAR;
 
 const postsQueryKey = ["posts"] as const;
 
@@ -46,6 +52,7 @@ type CommentComposerProps = {
   placeholder?: string;
   isPending: boolean;
   onSubmit: (content: string) => Promise<void>;
+  avatarUrl?: string;
 };
 
 function CommentComposer({
@@ -53,6 +60,7 @@ function CommentComposer({
   placeholder = "Write a comment",
   isPending,
   onSubmit,
+  avatarUrl = FALLBACK_COMMENT_AVATAR,
 }: CommentComposerProps) {
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
@@ -92,7 +100,7 @@ function CommentComposer({
         className="flex min-h-12 items-center rounded-[18px] bg-[#f6f6f6] px-[9px] py-1 dark:bg-[#182a41]"
       >
         <Image
-          src="/assets/images/comment_img.png"
+          src={avatarUrl}
           alt=""
           width={26}
           height={26}
@@ -131,6 +139,7 @@ type CommentRowProps = {
   comment: FeedComment;
   allowReply: boolean;
   refreshKey: readonly unknown[];
+  currentUserAvatarUrl?: string;
 };
 
 function CommentRow({
@@ -138,6 +147,7 @@ function CommentRow({
   comment,
   allowReply,
   refreshKey,
+  currentUserAvatarUrl,
 }: CommentRowProps) {
   const queryClient = useQueryClient();
   const [isReplying, setIsReplying] = useState(false);
@@ -192,11 +202,7 @@ function CommentRow({
   return (
     <div className="flex gap-3">
       <Image
-        src={
-          comment.author.avatarKey?.startsWith("/")
-            ? comment.author.avatarKey
-            : "/assets/images/txt_img.png"
-        }
+        src={resolveAvatarUrl(comment.author.avatarKey)}
         alt=""
         width={40}
         height={40}
@@ -222,10 +228,12 @@ function CommentRow({
                   className="size-4 text-[#4d8dff]"
                   strokeWidth={2}
                 />
-                <Heart
-                  className="-ml-1 size-4 text-red-500"
-                  strokeWidth={2}
-                />
+                {comment.likeCount > 1 && (
+                  <Heart
+                    className="-ml-1 size-4 text-red-500"
+                    strokeWidth={2}
+                  />
+                )}
               </span>
               <span className="ml-1 mt-[3px] text-sm font-medium leading-[17px] text-[#112032] dark:text-white">
                 {comment.likeCount}
@@ -284,6 +292,7 @@ function CommentRow({
             <CommentComposer
               label={`Reply to ${comment.author.firstName}`}
               placeholder={`Reply to ${comment.author.firstName}`}
+              avatarUrl={currentUserAvatarUrl}
               isPending={replyMutation.isPending}
               onSubmit={(content) => replyMutation.mutateAsync(content).then(() => undefined)}
             />
@@ -311,6 +320,7 @@ function CommentRow({
                 comment={reply}
                 allowReply={false}
                 refreshKey={replyQueryKey(comment.id)}
+                currentUserAvatarUrl={currentUserAvatarUrl}
               />
             ))}
             {repliesQuery.hasNextPage && (
@@ -341,7 +351,13 @@ function CommentRow({
   );
 }
 
-export function PostComments({ postId }: { postId: string }) {
+export function PostComments({
+  postId,
+  currentUserAvatarUrl,
+}: {
+  postId: string;
+  currentUserAvatarUrl?: string;
+}) {
   const queryClient = useQueryClient();
   const commentsQuery = useInfiniteQuery({
     queryKey: commentQueryKey(postId),
@@ -368,6 +384,7 @@ export function PostComments({ postId }: { postId: string }) {
       <div className="px-6 pb-3 pt-5">
         <CommentComposer
           label="Write a comment on this post"
+          avatarUrl={currentUserAvatarUrl}
           isPending={createMutation.isPending}
           onSubmit={(content) => createMutation.mutateAsync(content).then(() => undefined)}
         />
@@ -396,6 +413,7 @@ export function PostComments({ postId }: { postId: string }) {
             comment={comment}
             allowReply
             refreshKey={commentQueryKey(postId)}
+            currentUserAvatarUrl={currentUserAvatarUrl}
           />
         ))}
         {commentsQuery.hasNextPage && (

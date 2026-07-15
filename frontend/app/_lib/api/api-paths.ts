@@ -3,3 +3,4 @@ export const AUTH_API_PATH = `${API_V1_PATH}/auth`;
 export const POSTS_API_PATH = `${API_V1_PATH}/posts`;
 export const COMMENTS_API_PATH = `${API_V1_PATH}/comments`;
 export const UPLOADS_API_PATH = `${API_V1_PATH}/uploads`;
+export const USERS_API_PATH = `${API_V1_PATH}/users`;

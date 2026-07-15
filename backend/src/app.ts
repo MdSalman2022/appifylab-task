@@ -14,6 +14,7 @@ import {
   type CommentModel,
 } from "./models/comment-model.js";
 import { createPrismaPostModel, type PostModel } from "./models/post-model.js";
+import { createPrismaUserModel, type UserModel } from "./models/user-model.js";
 import { createApiV1Routes } from "./routes/api-v1-routes.js";
 import type { PostImageStorage } from "./services/post-image-storage.js";
 import { createR2PostImageStorage } from "./services/r2-post-image-storage.js";
@@ -24,6 +25,7 @@ type AppDependencies = {
   postModel?: PostModel;
   commentModel?: CommentModel;
   postImageStorage?: PostImageStorage;
+  userModel?: UserModel;
 };
 
 export function createApp(
@@ -33,6 +35,7 @@ export function createApp(
     postModel: createPrismaPostModel(),
     commentModel: createPrismaCommentModel(),
     postImageStorage: createR2PostImageStorage(),
+    userModel: createPrismaUserModel(),
   },
 ) {
   const app = express();
@@ -54,6 +57,7 @@ export function createApp(
       dependencies.postModel ?? createPrismaPostModel(),
       dependencies.commentModel ?? createPrismaCommentModel(),
       dependencies.postImageStorage ?? createR2PostImageStorage(),
+      dependencies.userModel ?? createPrismaUserModel(),
     ),
   );
 

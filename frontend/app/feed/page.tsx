@@ -1,29 +1,43 @@
 import { requireCurrentUser } from "../_lib/auth/auth-server";
 import { Stories } from "./_components/feed-content";
+import { FeedShell } from "./_components/feed-shell";
 import { FeedTimeline } from "./_components/feed-timeline";
-import { FeedHeader } from "./_components/feed-header";
-import { FeedTheme } from "./_components/feed-theme";
 import { LeftSidebar } from "./_components/left-sidebar";
 import { RightSidebar } from "./_components/right-sidebar";
 import styles from "./feed.module.css";
+
 export default async function FeedPage() {
   const user = await requireCurrentUser();
 
   return (
-    <FeedTheme>
-      <div>
-        <FeedHeader user={user} />
-        <main className={styles.container}>
-          <div className={styles.columns}>
-            <LeftSidebar />
-            <div>
-              <Stories />
-              <FeedTimeline currentUserId={user.id} />
-            </div>
-            <RightSidebar />
-          </div>
-        </main>
+    <FeedShell user={user} constrainViewport>
+      <div className={styles.columns}>
+        <div
+          role="region"
+          aria-label="Explore and community"
+          tabIndex={0}
+          className={`${styles.columnScroll} ${styles.columnBottomSpace} max-lg:hidden`}
+        >
+          <LeftSidebar />
+        </div>
+        <div
+          role="region"
+          aria-label="Post feed"
+          tabIndex={0}
+          className={`${styles.columnScroll} ${styles.columnBottomSpace}`}
+        >
+          <Stories />
+          <FeedTimeline currentUser={user} />
+        </div>
+        <div
+          role="region"
+          aria-label="Suggestions and friends"
+          tabIndex={0}
+          className={`${styles.columnScroll} ${styles.columnBottomSpace} max-lg:hidden`}
+        >
+          <RightSidebar />
+        </div>
       </div>
-    </FeedTheme>
+    </FeedShell>
   );
 }

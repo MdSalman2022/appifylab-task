@@ -1,3 +1,12 @@
+export const DEFAULT_AVATAR = "/assets/images/salman.jpg";
+
+export function resolveAvatarUrl(
+  avatarKey: string | null | undefined,
+  fallback: string = DEFAULT_AVATAR,
+): string {
+  return resolveMediaUrl(avatarKey ?? null) ?? fallback;
+}
+
 export function resolveMediaUrl(key: string | null): string | null {
   if (!key) return null;
   if (key.startsWith("/")) return key;

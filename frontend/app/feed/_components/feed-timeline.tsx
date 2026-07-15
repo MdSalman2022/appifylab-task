@@ -10,17 +10,25 @@ import {
   unlikePost,
   updatePost,
 } from "../../_lib/posts/post-client";
+import type { AuthUser } from "../../_lib/auth/auth-contract";
 import type {
   CreatePostInput,
   PostPage,
   UpdatePostInput,
 } from "../../_lib/posts/post-contract";
+import { resolveAvatarUrl } from "../../_lib/uploads/media-url";
 import { FeedPostCard } from "./feed-post-card";
 import { PostComposer } from "./post-composer";
 
 const postsQueryKey = ["posts"] as const;
 
-export function FeedTimeline({ currentUserId }: { currentUserId: string }) {
+export function FeedTimeline({
+  currentUser,
+}: {
+  currentUser: AuthUser;
+}) {
+  const currentUserId = currentUser.id;
+  const currentUserAvatarUrl = resolveAvatarUrl(currentUser.avatarKey);
   const queryClient = useQueryClient();
   const postsQuery = useInfiniteQuery({
     queryKey: postsQueryKey,
@@ -56,7 +64,7 @@ export function FeedTimeline({ currentUserId }: { currentUserId: string }) {
 
   return (
     <>
-      <PostComposer onCreate={handleCreate} />
+      <PostComposer onCreate={handleCreate} avatarUrl={currentUserAvatarUrl} />
       {postsQuery.isPending && (
         <div aria-label="Loading posts" className="mt-4 h-64 animate-pulse rounded-md bg-white dark:bg-[#112032]" />
       )}
@@ -77,6 +85,7 @@ export function FeedTimeline({ currentUserId }: { currentUserId: string }) {
           key={post.id}
           post={post}
           currentUserId={currentUserId}
+          currentUserAvatarUrl={currentUserAvatarUrl}
           onUpdate={(postId, input) => updateMutation.mutateAsync({ postId, input }).then(() => undefined)}
           onDelete={(postId) => deleteMutation.mutateAsync(postId).then(() => undefined)}
           onToggleLike={(postId, hasLiked) =>

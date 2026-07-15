@@ -11,6 +11,7 @@ function renderEngagement(
   onToggleLike: () => Promise<void>,
   onOpenComments = vi.fn(),
   viewerHasLiked = false,
+  likeCount = viewerHasLiked ? 1 : 0,
 ) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -19,9 +20,10 @@ function renderEngagement(
     <QueryClientProvider client={queryClient}>
       <PostEngagement
         postId="b3e857a5-bf7a-4ef1-b9d3-91a20f677718"
-        likeCount={viewerHasLiked ? 1 : 0}
+        likeCount={likeCount}
         commentCount={0}
         viewerHasLiked={viewerHasLiked}
+        commentsOpen={false}
         onToggleLike={onToggleLike}
         onOpenComments={onOpenComments}
       />
@@ -59,5 +61,21 @@ describe("PostEngagement", () => {
     await user.click(screen.getByRole("button", { name: "Comment" }));
 
     expect(onOpenComments).toHaveBeenCalledOnce();
+  });
+
+  it("renders a compact liker preview with the accurate total", () => {
+    renderEngagement(
+      vi.fn().mockResolvedValue(undefined),
+      vi.fn(),
+      false,
+      7,
+    );
+
+    expect(
+      screen.getByRole("button", {
+        name: "View 7 people who liked this post",
+      }),
+    ).toBeTruthy();
+    expect(screen.getByText("2+")).toBeTruthy();
   });
 });

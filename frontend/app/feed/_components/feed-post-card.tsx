@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreVertical } from "lucide-react";
+import { ImageIcon, Mic, MoreVertical } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -9,17 +9,33 @@ import type {
   PostVisibility,
   UpdatePostInput,
 } from "../../_lib/posts/post-contract";
-import { resolveMediaUrl } from "../../_lib/uploads/media-url";
+import {
+  DEFAULT_AVATAR,
+  resolveAvatarUrl,
+  resolveMediaUrl,
+} from "../../_lib/uploads/media-url";
 import { PostComments } from "./post-comments";
 import { PostEngagement } from "./post-engagement";
+import { VisibilitySelect, visibilityOptions } from "./visibility-select";
 
 type FeedPostCardProps = {
   post: FeedPost;
   currentUserId: string;
+  currentUserAvatarUrl?: string;
   onUpdate: (postId: string, input: UpdatePostInput) => Promise<void>;
   onDelete: (postId: string) => Promise<void>;
   onToggleLike: (postId: string, viewerHasLiked: boolean) => Promise<void>;
 };
+
+function PostVisibilityBadge({ visibility }: { visibility: PostVisibility }) {
+  const { label, icon: Icon } = visibilityOptions[visibility];
+  return (
+    <span className="inline-flex items-center gap-1">
+      <Icon aria-hidden="true" className="size-3.5" strokeWidth={1.8} />
+      {label}
+    </span>
+  );
+}
 
 function formatPostTime(value: string) {
   const elapsedMinutes = Math.max(
@@ -39,6 +55,7 @@ function formatPostTime(value: string) {
 export function FeedPostCard({
   post,
   currentUserId,
+  currentUserAvatarUrl,
   onUpdate,
   onDelete,
   onToggleLike,
@@ -91,11 +108,7 @@ export function FeedPostCard({
       <div className="px-6 pt-6">
         <header className="relative flex items-center">
           <Image
-            src={
-              post.author.avatarKey?.startsWith("/")
-                ? post.author.avatarKey
-                : "/assets/images/post_img.png"
-            }
+            src={resolveAvatarUrl(post.author.avatarKey)}
             alt=""
             width={44}
             height={44}
@@ -105,9 +118,9 @@ export function FeedPostCard({
             <h2 className="font-medium">
               {post.author.firstName} {post.author.lastName}
             </h2>
-            <p className="text-sm text-[#8a8e98] dark:text-white/46">
+            <p className="flex items-center gap-1 text-sm text-[#8a8e98] dark:text-white/46">
               {formatPostTime(post.createdAt)} ·{" "}
-              {post.visibility === "PUBLIC" ? "Public" : "Private"}
+              <PostVisibilityBadge visibility={post.visibility} />
             </p>
           </div>
           {isAuthor && (
@@ -154,18 +167,13 @@ export function FeedPostCard({
               rows={3}
               className="w-full resize-none rounded border border-[#dce4f1] bg-transparent p-3 outline-none focus:border-[#1890ff] dark:border-white/15"
             />
-            <div className="flex justify-end gap-2">
-              <select
-                aria-label="Edit post visibility"
+            <div className="flex items-center justify-end gap-2">
+              <VisibilitySelect
                 value={visibility}
-                onChange={(event) =>
-                  setVisibility(event.target.value as PostVisibility)
-                }
-                className="rounded border border-[#dce4f1] bg-white px-2 dark:border-white/15 dark:bg-[#112032]"
-              >
-                <option value="PUBLIC">Public</option>
-                <option value="PRIVATE">Private</option>
-              </select>
+                onChange={setVisibility}
+                disabled={isSaving}
+                direction="down"
+              />
               <button
                 type="button"
                 onClick={() => {
@@ -213,10 +221,46 @@ export function FeedPostCard({
         likeCount={post.likeCount}
         commentCount={post.commentCount}
         viewerHasLiked={post.viewerHasLiked}
+        commentsOpen={areCommentsOpen}
         onToggleLike={() => onToggleLike(post.id, post.viewerHasLiked)}
         onOpenComments={() => setAreCommentsOpen((current) => !current)}
       />
-      {areCommentsOpen && <PostComments postId={post.id} />}
+      {!areCommentsOpen && (
+        <div className="px-6 pb-1 pt-5">
+          <button
+            type="button"
+            onClick={() => setAreCommentsOpen(true)}
+            className="flex min-h-12 w-full items-center rounded-[18px] bg-[#f6f6f6] px-[9px] py-1 text-left dark:bg-[#182a41]"
+          >
+            <Image
+              src={currentUserAvatarUrl ?? DEFAULT_AVATAR}
+              alt=""
+              width={26}
+              height={26}
+              className="size-[26px] shrink-0 rounded-full object-cover"
+            />
+            <span className="min-w-0 flex-1 px-2 text-sm text-black/45 dark:text-white/36">
+              Write a comment
+            </span>
+            <Mic
+              aria-hidden="true"
+              className="mx-2 size-4 text-black/45 dark:text-white/46"
+              strokeWidth={1.5}
+            />
+            <ImageIcon
+              aria-hidden="true"
+              className="mr-2 size-4 text-black/45 dark:text-white/46"
+              strokeWidth={1.5}
+            />
+          </button>
+        </div>
+      )}
+      {areCommentsOpen && (
+        <PostComments
+          postId={post.id}
+          currentUserAvatarUrl={currentUserAvatarUrl}
+        />
+      )}
     </article>
   );
 }

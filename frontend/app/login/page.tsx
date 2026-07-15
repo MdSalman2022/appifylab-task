@@ -66,7 +66,7 @@ export default function LoginPage() {
             <label htmlFor="email" className="mb-2 block text-sm font-medium text-[#1f2937]">Email</label>
             <input id="email" name="email" type="email" required autoComplete="email" className="mb-4 h-12 w-full rounded border border-[#e5e7eb] bg-white px-4 text-[#111827] outline-none transition focus:border-[#4f8cff] focus:ring-2 focus:ring-[#4f8cff]/20" />
 
-            <PressToRevealPassword id="password" name="password" label="Password" autoComplete="current-password" className="mb-4 h-12 w-full rounded border border-[#e5e7eb] bg-white px-4 text-[#111827] outline-none transition focus:border-[#4f8cff] focus:ring-2 focus:ring-[#4f8cff]/20" />
+            <PressToRevealPassword id="password" name="password" label="Password" autoComplete="current-password" containerClassName="mb-4" className="h-12 w-full rounded border border-[#e5e7eb] bg-white px-4 text-[#111827] outline-none transition focus:border-[#4f8cff] focus:ring-2 focus:ring-[#4f8cff]/20" />
 
             <div className="mb-10 flex items-center justify-between text-sm">
               <label className="flex items-center gap-2 text-[#1f2937]"><input name="rememberMe" type="checkbox" defaultChecked className="size-4 accent-[#4f8cff]" />Remember me</label>

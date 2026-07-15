@@ -9,6 +9,7 @@ import type {
   PostLiker,
   PostLikersPage,
 } from "../../_lib/posts/post-contract";
+import { resolveAvatarUrl } from "../../_lib/uploads/media-url";
 
 type LikersDialogProps = {
   dialogId: string;
@@ -23,11 +24,7 @@ function UserRow({ user }: { user: PostLiker }) {
   return (
     <li className="flex items-center gap-3">
       <Image
-        src={
-          user.avatarKey?.startsWith("/")
-            ? user.avatarKey
-            : "/assets/images/post_img.png"
-        }
+        src={resolveAvatarUrl(user.avatarKey)}
         alt=""
         width={40}
         height={40}

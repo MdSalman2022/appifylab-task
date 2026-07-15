@@ -8,6 +8,7 @@ type PressToRevealPasswordProps = {
   name: string;
   label: string;
   className: string;
+  containerClassName?: string;
   minLength?: number;
   autoComplete: "current-password" | "new-password";
 };
@@ -17,13 +18,14 @@ export function PressToRevealPassword({
   name,
   label,
   className,
+  containerClassName,
   minLength,
   autoComplete,
 }: PressToRevealPasswordProps) {
   const [isRevealed, setIsRevealed] = useState(false);
 
   return (
-    <div>
+    <div className={containerClassName}>
       <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-[#1f2937]">
         {label}
       </label>

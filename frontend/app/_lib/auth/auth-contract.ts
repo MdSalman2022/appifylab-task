@@ -5,6 +5,7 @@ export const userSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
   email: z.email(),
+  avatarKey: z.string().nullable().optional(),
 });
 
 export const authResponseSchema = z.object({

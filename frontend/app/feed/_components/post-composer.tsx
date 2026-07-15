@@ -22,19 +22,23 @@ import type {
   CreatePostInput,
   PostVisibility,
 } from "../../_lib/posts/post-contract";
+import { DEFAULT_AVATAR } from "../../_lib/uploads/media-url";
 import {
   uploadPostImage,
   validatePostImage,
 } from "../../_lib/uploads/upload-client";
+import { VisibilitySelect } from "./visibility-select";
 
 type PostComposerProps = {
   onCreate: (input: CreatePostInput) => Promise<void>;
   onUploadImage?: (file: File) => Promise<string>;
+  avatarUrl?: string;
 };
 
 export function PostComposer({
   onCreate,
   onUploadImage = uploadPostImage,
+  avatarUrl = DEFAULT_AVATAR,
 }: PostComposerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [content, setContent] = useState("");
@@ -112,7 +116,7 @@ export function PostComposer({
     >
       <div className="flex items-start gap-3">
         <Image
-          src="/assets/images/txt_img.png"
+          src={avatarUrl}
           alt=""
           width={36}
           height={36}
@@ -126,6 +130,12 @@ export function PostComposer({
           rows={2}
           placeholder="Write something ..."
           className="min-h-16 flex-1 resize-none bg-transparent pt-1 text-base text-[#595b61] outline-none placeholder:text-[#595b61] dark:text-white dark:placeholder:text-white/46"
+        />
+        <VisibilitySelect
+          value={visibility}
+          onChange={setVisibility}
+          disabled={isSubmitting}
+          direction="down"
         />
       </div>
 
@@ -154,8 +164,8 @@ export function PostComposer({
         </div>
       )}
 
-      <div className="mt-8 flex min-h-16 items-center bg-[#f5f8ff] px-6 dark:bg-[#11263c]">
-        <div className="flex items-center gap-6 text-[#555b64] dark:text-white/46">
+      <div className="mt-8 flex min-h-16 items-center gap-2 bg-[#f5f8ff] px-3 sm:px-6 dark:bg-[#11263c]">
+        <div className="flex items-center gap-4 text-[#555b64] sm:gap-6 dark:text-white/46">
           <input
             ref={fileInputRef}
             type="file"
@@ -171,37 +181,22 @@ export function PostComposer({
             className="flex items-center gap-2 disabled:cursor-not-allowed"
           >
             <ImageIcon className="size-5" />
-            Photo
+            <span className="max-sm:hidden">Photo</span>
           </button>
           <button type="button" disabled className="flex items-center gap-2 disabled:cursor-not-allowed">
-            <Video className="size-5" /> Video
+            <Video className="size-5" /> <span className="max-sm:hidden">Video</span>
           </button>
           <button type="button" disabled className="flex items-center gap-2 disabled:cursor-not-allowed">
-            <CalendarDays className="size-5" /> Event
+            <CalendarDays className="size-5" /> <span className="max-sm:hidden">Event</span>
           </button>
           <button type="button" disabled className="flex items-center gap-2 disabled:cursor-not-allowed">
-            <FileText className="size-5" /> Article
+            <FileText className="size-5" /> <span className="max-sm:hidden">Article</span>
           </button>
         </div>
-        <label className="ml-auto mr-3 text-sm text-[#555b64] dark:text-white/70">
-          <span className="sr-only">Post visibility</span>
-          <select
-            aria-label="Post visibility"
-            value={visibility}
-            onChange={(event) =>
-              setVisibility(event.target.value as PostVisibility)
-            }
-            disabled={isSubmitting}
-            className="h-10 rounded border border-[#dce4f1] bg-white px-2 outline-none focus:border-[#1890ff] disabled:opacity-60 dark:border-white/15 dark:bg-[#112032]"
-          >
-            <option value="PUBLIC">Public</option>
-            <option value="PRIVATE">Private</option>
-          </select>
-        </label>
         <button
           type="submit"
           disabled={!canSubmit}
-          className="flex h-12 w-[102px] items-center justify-center gap-2 rounded bg-[#1890ff] font-medium text-white transition-colors hover:bg-[#377dff] disabled:cursor-not-allowed disabled:opacity-60"
+          className="ml-auto flex h-12 min-w-24 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded bg-[#1890ff] px-4 font-medium text-white transition-colors hover:bg-[#377dff] disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-[102px]"
         >
           <Send className="size-4" />
           {isSubmitting ? (selectedImage ? "Uploading" : "Posting") : "Post"}
